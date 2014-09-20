@@ -1,0 +1,28 @@
+{
+  "name": "logon",
+  "version": "0.0.0",
+  "description": "NodeOS login mechanism",
+  "main": "index.js",
+  "bin": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/piranna/logon.git"
+  },
+  "keywords": [
+    "NodeOS",
+    "login",
+    "password"
+  ],
+  "author": "Jesús Leganés Combarro 'piranna' <piranna@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/piranna/logon/issues"
+  },
+  "homepage": "https://github.com/piranna/logon",
+  "dependencies": {
+    "prompt": "^0.2.14"
+  }
+}
