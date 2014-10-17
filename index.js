@@ -18,8 +18,10 @@ function startRepl(prompt)
   });
 }
 
-function failure(pending)
+function failure(pending, error)
 {
+  if(error) console.error(error.message || error);
+
   if(pending) return;
 
   process.exit()
@@ -28,6 +30,8 @@ function failure(pending)
 
 var config;
 var HOME;
+
+var uid, gid;
 
 var tries_username = 3
 var tries_password = 3
@@ -48,28 +52,37 @@ var schema =
 
         try
         {
-          fs.statSync(HOME)
+          var statsHome = fs.statSync(HOME)
         }
         catch(err)
         {
           if(err.code != 'ENOENT') throw err
-          return failure(tries_username--);
+          return failure(--tries_username, 'User '+value+' not found');
         }
 
         // Get user's logon configuration
-        var logon = '/home/'+value+'/etc/logon.json'
+        var logon = HOME+'/etc/logon.json'
+
+        var stats = fs.statSync(logon);
+
+        uid = stats.uid;
+        gid = stats.gid;
 
         try
         {
+          if(statsHome.uid != uid || statsHome.gid != gid)
+            throw HOME+" uid & gid don't match with its logon"
+
           config = require(logon)
         }
-        catch(err)
+        catch(error)
         {
-          return failure(--tries_username);
+          return failure(--tries_username, error);
         }
 
+        // Check if account is password-less (for example, a guest account)
         var password = config.password
-        if(password == '')
+        if(password === '')
         {
           prompt.override = prompt.override || {}
           prompt.override.password = ''
@@ -80,7 +93,8 @@ var schema =
         var result = typeof password == 'string'
         if(result) return true;
 
-        failure(--tries_username)
+        // User don't have defined a password, it's a non-interactive account
+        failure(--tries_username, 'Non-interactive account')
       }
     },
     password:
@@ -129,7 +143,10 @@ prompt.get(schema, function(err, result)
     detached: true,
 
     cwd: HOME,
-    env: env
+    env: env,
+
+    uid: uid,
+    gid: gid
   })
   .on('error', function(error)
   {
