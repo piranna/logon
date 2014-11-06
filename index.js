@@ -90,8 +90,7 @@ var schema =
           return true
         }
 
-        var result = typeof password == 'string'
-        if(result) return true;
+        if(typeof password == 'string') return true;
 
         // User don't have defined a password, it's a non-interactive account
         failure(--tries_username, 'Non-interactive account')
@@ -120,8 +119,7 @@ var schema =
 //
 // Start the prompt
 //
-prompt.message = 'Welcome to NodeOS!'.rainbow;
-prompt.start();
+prompt.start({message: 'Welcome to NodeOS!'.rainbow});
 
 //
 // Get two properties from the user: username and password
@@ -130,27 +128,23 @@ prompt.get(schema, function(err, result)
 {
   if(err) return;
 
-  var env =
-  {
-    HOME: HOME,
-    PATH: HOME+'/bin:/usr/bin',
-    __proto__: process.env
-  }
+  process.chdir(HOME)
+
+  process.setgid(gid);
+  process.setuid(uid);
+  process.env.HOME = HOME;
+  process.env.PATH = HOME+'/bin:/usr/bin';
 
   spawn(config.shell, [],
   {
     stdio: 'inherit',
     detached: true,
 
-    cwd: HOME,
-    env: env,
-
-    uid: uid,
-    gid: gid
+    cwd: HOME
   })
   .on('error', function(error)
   {
-    console.error(error)
+    console.trace(error)
 
     startRepl('logon')
   })
