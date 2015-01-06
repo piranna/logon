@@ -133,7 +133,7 @@ prompt.get(schema, function(err, result)
   process.setgid(gid);
   process.setuid(uid);
   process.env.HOME = HOME;
-  process.env.PATH = HOME+'/bin:/usr/bin';
+  process.env.PATH = HOME+'/bin:/bin';
 
   spawn(config.shell, [],
   {
