@@ -6,6 +6,8 @@ var shasum = require('crypto').createHash('sha1');
 
 var prompt = require('prompt');
 
+var chroot = require('posix').chroot
+
 
 function startRepl(prompt)
 {
@@ -128,19 +130,16 @@ prompt.get(schema, function(err, result)
 {
   if(err) return;
 
-  process.chdir(HOME)
-
   process.setgid(gid);
   process.setuid(uid);
-  process.env.HOME = HOME;
-  process.env.PATH = HOME+'/bin:/bin';
+  process.env.PATH = '/bin';
+
+  chroot(HOME)
 
   spawn(config.shell, [],
   {
     stdio: 'inherit',
-    detached: true,
-
-    cwd: HOME
+    detached: true
   })
   .on('error', function(error)
   {
@@ -148,8 +147,5 @@ prompt.get(schema, function(err, result)
 
     startRepl('logon')
   })
-  .on('exit', function(code)
-  {
-    process.exit(code);
-  });
+  .on('exit', process.exit.bind(process));
 });
