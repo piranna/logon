@@ -6,7 +6,7 @@ var shasum = require('crypto').createHash('sha1');
 
 var prompt = require('prompt');
 
-var chroot = require('posix').chroot
+var posix = require('posix')
 
 
 function startRepl(prompt)
@@ -128,13 +128,20 @@ prompt.start({message: 'Welcome to NodeOS!'.rainbow});
 //
 prompt.get(schema, function(err, result)
 {
-  if(err) return;
+  if(err) return
 
-  process.setgid(gid);
-  process.setuid(uid);
-  process.env.PATH = '/bin';
+  posix.chroot(HOME)
 
-  chroot(HOME)
+  // Set process real UID & GID to don't leak permissions in case of error
+  // executing the shell and starting a REPL
+  posix.setregid(gid, gid)
+  posix.setreuid(uid, uid)
+
+  // $PATH environment varible used INSIDE the spawned process. By default it
+  // the same of the currect process, that's already defined to `/bin`. I left
+  // this here for reference if in the future this could be defined in
+  // `config.json` file
+//  process.env.PATH = '/bin'
 
   spawn(config.shell, [],
   {

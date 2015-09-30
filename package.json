@@ -1,6 +1,6 @@
 {
   "name": "logon",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "NodeOS login mechanism",
   "main": "index.js",
   "bin": "index.js",
