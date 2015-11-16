@@ -1,12 +1,11 @@
 #!/usr/bin/env node
 
-var fs = require('fs')
-var spawn = require('child_process').spawn
-var shasum = require('crypto').createHash('sha1');
+var fs     = require('fs')
+var shasum = require('crypto').createHash('sha1')
 
-var prompt = require('prompt');
-
-var posix = require('posix')
+var kexec  = require('kexec')
+var posix  = require('posix')
+var prompt = require('prompt')
 
 
 function startRepl(prompt)
@@ -15,18 +14,16 @@ function startRepl(prompt)
 
   require('repl').start(prompt+'> ').on('exit', function()
   {
-    console.log('Got "exit" event from repl!');
-    process.exit(2);
+    console.log('Got "exit" event from repl!')
+    process.exit(2)
   });
 }
 
 function failure(pending, error)
 {
-  if(error) console.error(error.message || error);
+  if(error) console.error(error.message || error)
 
-  if(pending) return;
-
-  process.exit()
+  if(!pending) process.exit()
 }
 
 
@@ -73,7 +70,7 @@ var schema =
         try
         {
           if(statsHome.uid != uid || statsHome.gid != gid)
-            throw HOME+" uid & gid don't match with its logon"
+            throw HOME+" uid & gid don't match with its logon config file"
 
           config = require(logon)
         }
@@ -108,20 +105,22 @@ var schema =
       {
         var password = config.password
 
-        var result = password == ''
-                  || password == shasum.update(value).digest('hex')
+        var result = password === ''
+                  || password === shasum.update(value).digest('hex')
         if(result) return true
 
         failure(--tries_password)
       }
     }
   }
-};
+}
+
 
 //
 // Start the prompt
 //
-prompt.start({message: 'Welcome to NodeOS!'.rainbow});
+var NodeOS = 'N'.blue+'ode'.cyan+'OS'.blue
+prompt.start({message: 'Welcome to '+NodeOS+'!'})
 
 //
 // Get two properties from the user: username and password
@@ -137,22 +136,14 @@ prompt.get(schema, function(err, result)
   posix.setregid(gid, gid)
   posix.setreuid(uid, uid)
 
-  // $PATH environment varible used INSIDE the spawned process. By default it
+  // $PATH environment varible used INSIDE the kexeced process. By default it's
   // the same of the currect process, that's already defined to `/bin`. I left
   // this here for reference if in the future this could be defined in
   // `config.json` file
 //  process.env.PATH = '/bin'
 
-  spawn(config.shell, [],
-  {
-    stdio: 'inherit',
-    detached: true
-  })
-  .on('error', function(error)
-  {
-    console.trace(error)
+  kexec(config.shell, config.shellArgs || [])
 
-    startRepl('logon')
-  })
-  .on('exit', process.exit.bind(process));
-});
+  // kexec failed, start REPL
+  startRepl('logon')
+})
