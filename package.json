@@ -1,6 +1,6 @@
 {
   "name": "logon",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "NodeOS login mechanism",
   "main": "index.js",
   "bin": "index.js",
@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/piranna/logon",
   "dependencies": {
-    "kexec": "piranna/node-kexec#patch-1",
+    "kexec": "^2.0.0",
     "posix": "^2.0.0",
     "prompt": "^0.2.14"
   }
