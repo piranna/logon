@@ -25,6 +25,7 @@
   "dependencies": {
     "kexec": "^2.0.0",
     "posix": "^2.0.0",
-    "prompt": "^0.2.14"
+    "prompt": "^0.2.14",
+    "tar-fs": "^1.10.0"
   }
 }
