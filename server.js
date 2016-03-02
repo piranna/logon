@@ -22,7 +22,9 @@ function startRepl(prompt)
 
 function failure(pending, error)
 {
-  if(error) console.error(error.message || error)
+  prompt.message = ''
+
+  this.message = error.message || error
 
   if(!pending) process.exit()
 }
@@ -37,84 +39,98 @@ var tries_username = 3
 var tries_password = 3
 
 
+var schema_username =
+{
+  type: 'string',
+  required: true,
+  conform: function(value)
+  {
+    if(prompt.message.length) prompt.message = '·'+' '.repeat(17)
+
+    // Get user's $HOME directory
+    HOME = '/home/'+value
+
+    try
+    {
+      var statsHome = fs.statSync(HOME)
+    }
+    catch(err)
+    {
+      if(err.code != 'ENOENT') throw err
+
+      return failure.call(schema_username, --tries_username, 'User '+value+' not found')
+    }
+
+    // Get user's logon configuration
+    var logon = HOME+'/etc/logon.json'
+
+    try
+    {
+      var stats = fs.statSync(logon)
+    }
+    catch(err)
+    {
+      if(err.code != 'ENOENT') throw err
+
+      return failure.call(schema_username, --tries_username, 'User '+value+' not found')
+    }
+
+    uid = stats.uid
+    gid = stats.gid
+
+    try
+    {
+      if(statsHome.uid != uid || statsHome.gid != gid)
+        throw HOME+" uid & gid don't match with its logon config file"
+
+      config = require(logon)
+    }
+    catch(error)
+    {
+      return failure.call(schema_username, --tries_username, error)
+    }
+
+    // Check if account is password-less (for example, a guest account)
+    var password = config.password
+    if(password === '')
+    {
+      prompt.override = prompt.override || {}
+      prompt.override.password = ''
+
+      return true
+    }
+
+    if(typeof password == 'string') return true
+
+    // User don't have defined a password, it's a non-interactive account
+    failure.call(schema_username, --tries_username, 'Non-interactive account')
+  }
+}
+
+var schema_password =
+{
+  type: 'string',
+  required: true,
+  hidden: true,
+  allowEmpty: true,
+  conform: function(value)
+  {
+    var password = config.password
+
+    var result = password === ''
+              || password === shasum.update(value).digest('hex')
+    if(result) return true
+
+    failure.call(schema_password, --tries_password, 'Invalid password')
+  }
+}
+
 var schema =
 {
   properties:
   {
-    username:
-    {
-      type: 'string',
-      required: true,
-      conform: function(value)
-      {
-        prompt.message = '·'+' '.repeat(17)
-
-        // Get user's $HOME directory
-        HOME = '/home/'+value
-
-        try
-        {
-          var statsHome = fs.statSync(HOME)
-        }
-        catch(err)
-        {
-          if(err.code != 'ENOENT') throw err
-          return failure(--tries_username, 'User '+value+' not found');
-        }
-
-        // Get user's logon configuration
-        var logon = HOME+'/etc/logon.json'
-
-        var stats = fs.statSync(logon);
-
-        uid = stats.uid;
-        gid = stats.gid;
-
-        try
-        {
-          if(statsHome.uid != uid || statsHome.gid != gid)
-            throw HOME+" uid & gid don't match with its logon config file"
-
-          config = require(logon)
-        }
-        catch(error)
-        {
-          return failure(--tries_username, error);
-        }
-
-        // Check if account is password-less (for example, a guest account)
-        var password = config.password
-        if(password === '')
-        {
-          prompt.override = prompt.override || {}
-          prompt.override.password = ''
-
-          return true
-        }
-
-        if(typeof password == 'string') return true;
-
-        // User don't have defined a password, it's a non-interactive account
-        failure(--tries_username, 'Non-interactive account')
-      }
-    },
-    password:
-    {
-      type: 'string',
-      required: true,
-      hidden: true,
-      allowEmpty: true,
-      conform: function(value)
-      {
-        var password = config.password
-
-        var result = password === ''
-                  || password === shasum.update(value).digest('hex')
-        if(result) return true
-
-        failure(--tries_password)
-      }
-    }
+    username: schema_username,
+    password: schema_password
   }
 }
 
