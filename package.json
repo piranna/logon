@@ -2,8 +2,7 @@
   "name": "logon",
   "version": "0.1.0",
   "description": "NodeOS login mechanism",
-  "main": "index.js",
-  "bin": "index.js",
+  "bin": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
