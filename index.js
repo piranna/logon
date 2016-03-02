@@ -3,6 +3,7 @@
 var fs     = require('fs')
 var shasum = require('crypto').createHash('sha1')
 
+var colors = require('colors/safe')
 var kexec  = require('kexec')
 var posix  = require('posix')
 var prompt = require('prompt')
@@ -119,7 +120,7 @@ var schema =
 //
 // Start the prompt
 //
-var NodeOS = 'N'.blue+'ode'.cyan+'OS'.blue
+var NodeOS = colors.blue('N')+colors.cyan('ode')+colors.blue('OS')
 prompt.start({message: 'Welcome to '+NodeOS+'!'})
 
 //
