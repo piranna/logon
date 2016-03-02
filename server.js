@@ -47,6 +47,8 @@ var schema =
       required: true,
       conform: function(value)
       {
+        prompt.message = '·'+' '.repeat(17)
+
         // Get user's $HOME directory
         HOME = '/home/'+value
 
