@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var fs     = require('fs')
+var join   = require('path').join
 var shasum = require('crypto').createHash('sha1')
 
 var colors = require('colors/safe')
@@ -8,9 +9,117 @@ var kexec  = require('kexec')
 var posix  = require('posix')
 var prompt = require('prompt')
 
+var getFreeUID = require('./lib/getFreeUID')
+
+var initUser
+try
+{
+  initUser = require('logon-initUser')
+}
+catch(e)
+{
+  initUser = null
+}
+
+
+function hashPassword(value)
+{
+  // Password is empty string, don't hash and use it literal
+  if(password === '') return ''
+
+  return shasum.update(value).digest('hex')
+}
+
+function createUser(username, password)
+{
+  fs.mkdir(HOME, function(error)
+  {
+    if(error) throw error
+
+    getFreeUID(HOME, function(error, uid)
+    {
+      if(error) throw error
+
+      fs.chown(HOME, uid, uid, function(error)
+      {
+        if(error) throw error
+
+        // Create /etc/logon.json
+        var config =
+        {
+          password: hashPassword(password)
+        }
+
+        fs.writeFile(join(HOME, '/etc/logon.json'), JSON.stringify(config),
+        function(error)
+        {
+          if(error) throw error
+
+          initUser(HOME, callback)
+        })
+      })
+    })
+  })
+}
+
+function askPassword()
+{
+  return prompt.history('create user').value
+}
+
+function askCreateUser(username)
+{
+  var schema =
+  {
+    properties:
+    {
+      'create user':
+      {
+        type: 'boolean',
+        value: 'The user ' + username + ' does not exist. Would you like to create it?',
+        required: true,
+        default: false
+      },
+      password:
+      {
+        type: 'string',
+        required: true,
+        hidden: true,
+        allowEmpty: true,
+        ask: askPassword
+      },
+      'confirm password':
+      {
+        type: 'string',
+        required: true,
+        hidden: true,
+        allowEmpty: true,
+        ask: askPassword,
+        conform: function(value)
+        {
+          return value === prompt.history('password').value
+        }
+      }
+    }
+  }
+
+  // ask the user if they want to create the account
+  prompt.get(schema, function(error, result)
+  {
+    if(error) return failure(--tries_username, error)
+
+    // They don't want to create the account, fail
+    if(!result['create user'])
+      return failure(--tries_username, 'Aborted creation of user "'+value+'"')
+
+    // Create the account
+    createUser(username, result.password)
+  })
+}
 
 function startRepl(prompt)
 {
+  /* eslint-disable no-console */
   console.log('Starting REPL session')
 
   require('repl').start(prompt+'> ').on('exit', function()
@@ -18,6 +127,7 @@ function startRepl(prompt)
     console.log('Got "exit" event from repl!')
     process.exit(2)
   });
+  /* eslint-enable no-console */
 }
 
 function failure(pending, error)
@@ -58,6 +168,8 @@ var schema_username =
     {
       if(err.code != 'ENOENT') throw err
 
+      if(initUser) return askCreateUser(value)
+
       return failure.call(schema_username, --tries_username, 'User '+value+' not found')
     }
 
@@ -72,6 +184,7 @@ var schema_username =
     {
       if(err.code != 'ENOENT') throw err
 
+      // The folder exists but not the config file: it's not an user `$HOME`
       return failure.call(schema_username, --tries_username, 'User '+value+' not found')
     }
 
@@ -80,6 +193,7 @@ var schema_username =
 
     try
     {
+      // Security check
       if(statsHome.uid != uid || statsHome.gid != gid)
         throw HOME+" uid & gid don't match with its logon config file"
 
@@ -118,7 +232,7 @@ var schema_password =
     var password = config.password
 
     var result = password === ''
-              || password === shasum.update(value).digest('hex')
+              || password === hashPassword(value)
     if(result) return true
 
     failure.call(schema_password, --tries_password, 'Invalid password')
@@ -161,8 +275,9 @@ prompt.get(schema, function(err)
   // `config.json` file
 //  process.env.PATH = '/bin'
 
-  kexec(config.shell, config.shellArgs || [])
+  var shell = config.shell
+  if(shell) kexec(shell, config.shellArgs || [])
 
-  // kexec failed, start REPL
+  // kexec failed or shell not defined, start REPL
   startRepl('logon')
 })
