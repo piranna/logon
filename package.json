@@ -4,7 +4,7 @@
   "description": "NodeOS login mechanism",
   "bin": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -26,5 +26,9 @@
     "kexec": "^2.0.2",
     "posix": "^4.0.0",
     "prompt": "^1.0.0"
+  },
+  "devDependencies": {
+    "mocha": "^2.4.5",
+    "mocha-eslint": "^2.0.2"
   }
 }

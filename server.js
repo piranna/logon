@@ -144,7 +144,7 @@ prompt.start({message: 'Welcome to '+NodeOS+'!'})
 //
 // Get two properties from the user: username and password
 //
-prompt.get(schema, function(err, result)
+prompt.get(schema, function(err)
 {
   if(err) return
 
