@@ -278,6 +278,6 @@ prompt.get(schema, function(err)
   var shell = config.shell
   if(shell) kexec(shell, config.shellArgs || [])
 
-  // kexec failed or shell not defined, start REPL
+   // kexec failed or shell not defined, start REPL
   startRepl('logon')
 })
