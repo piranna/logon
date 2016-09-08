@@ -276,7 +276,15 @@ prompt.get(schema, function(err)
 //  process.env.PATH = '/bin'
 
   var shell = config.shell
-  if(shell) kexec(shell, config.shellArgs || [])
+  if(shell)
+    try
+    {
+      kexec(shell, config.shellArgs || [])
+    }
+    catch(error)
+    {
+      console.error(error)
+    }
 
   // kexec failed or shell not defined, start REPL
   startRepl('logon')
