@@ -22,15 +22,24 @@ catch(e)
 }
 
 
+var config;
+var HOME;
+
+var uid, gid;
+
+var tries_username = 3
+var tries_password = 3
+
+
 function hashPassword(value)
 {
   // Password is empty string, don't hash and use it literal
-  if(password === '') return ''
+  if(value === '') return ''
 
   return shasum.update(value).digest('hex')
 }
 
-function createUser(username, password)
+function createUser(username, password, callback)
 {
   fs.mkdir(HOME, function(error)
   {
@@ -65,6 +74,15 @@ function createUser(username, password)
 function askPassword()
 {
   return prompt.history('create user').value
+}
+
+function failure(pending, error)
+{
+  prompt.message = ''
+
+  this.message = error.message || error
+
+  if(!pending) process.exit()
 }
 
 function askCreateUser(username)
@@ -110,7 +128,7 @@ function askCreateUser(username)
 
     // They don't want to create the account, fail
     if(!result['create user'])
-      return failure(--tries_username, 'Aborted creation of user "'+value+'"')
+      return failure(--tries_username, 'Aborted creation of user "'+username+'"')
 
     // Create the account
     createUser(username, result.password)
@@ -129,24 +147,6 @@ function startRepl(prompt)
   });
   /* eslint-enable no-console */
 }
-
-function failure(pending, error)
-{
-  prompt.message = ''
-
-  this.message = error.message || error
-
-  if(!pending) process.exit()
-}
-
-
-var config;
-var HOME;
-
-var uid, gid;
-
-var tries_username = 3
-var tries_password = 3
 
 
 var schema_username =
