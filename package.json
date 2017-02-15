@@ -22,14 +22,14 @@
   },
   "homepage": "https://github.com/piranna/logon",
   "dependencies": {
-    "async": "^2.0.1",
+    "async": "^2.1.4",
     "colors": "^1.1.2",
-    "kexec": "^2.0.2",
-    "posix": "^4.0.2",
+    "kexec": "^3.0.0",
+    "posix": "^4.1.1",
     "prompt": "^1.0.0"
   },
   "devDependencies": {
-    "mocha": "^3.0.2",
+    "mocha": "^3.2.0",
     "mocha-eslint": "^3.0.1"
   }
 }
