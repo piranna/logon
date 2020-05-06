@@ -4,7 +4,9 @@
   "description": "NodeOS login mechanism",
   "bin": "server.js",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -26,10 +28,12 @@
     "colors": "^1.1.2",
     "kexec": "^3.0.0",
     "posix": "^4.1.1",
-    "prompt": "^1.0.0"
+    "prompt": "^1.0.0",
+    "snyk": "^1.319.0"
   },
   "devDependencies": {
     "mocha": "^3.2.0",
     "mocha-eslint": "^3.0.1"
-  }
+  },
+  "snyk": true
 }
