@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/piranna/logon",
   "dependencies": {
-    "async": "^2.1.4",
+    "async": "^3.2.2",
     "colors": "^1.1.2",
     "kexec": "^3.0.0",
     "posix": "^4.1.1",
